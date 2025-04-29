@@ -2441,11 +2441,11 @@
                                 return actions.order.create({
                                     purchase_units: [{
                                         amount: {
-                                            value: this.totalPrice.toFixed(2),
+                                            value: Number(this.totalPrice).toFixed(2),
                                             currency_code: "USD",
                                             breakdown: {
                                                 item_total: {
-                                                    value: this.totalPrice.toFixed(2),
+                                                    value: Number(this.totalPrice).toFixed(2),
                                                     currency_code: "USD"
                                                 }
                                             }
@@ -2453,7 +2453,7 @@
                                         items: this.cart.map(item => ({
                                             name: item.subject,
                                             unit_amount: {
-                                                value: item.price.toFixed(2),
+                                                value:  Number(item.price).toFixed(2),
                                                 currency_code: "USD"
                                             },
                                             quantity: item.bookedSeats.toString()
