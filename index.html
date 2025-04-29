@@ -1,0 +1,3928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquatic Pet Shop</title>
+    <script src="https://unpkg.com/vue@2.7.8/dist/vue.js"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=AePRwamVS6liMdBwT8Ytz7-j4Ab02xOjpwm4nnmDov22Nuv2rVZuFfej_P3X5-rIu0ctTEAyxMdS08R4&currency=USD"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+        /* ==================== GLOBAL STYLES ==================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* ==================== HEADER STYLES ==================== */
+        header {
+            background-color: #0066cc;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .search-bar input {
+            padding: 0.6rem 1rem;
+            border-radius: 4px;
+            border: none;
+            width: 250px;
+            font-size: 1rem;
+        }
+
+        .cart-btn {
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cart-btn:hover {
+            background-color: #f57c00;
+            transform: translateY(-2px);
+        }
+
+        .cart-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ==================== MAIN CONTENT STYLES ==================== */
+        main {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            min-height: 60vh;
+        }
+
+        /* Sorting controls */
+        .sort-controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sort-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .sort-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            cursor: pointer;
+        }
+
+        /* Products grid */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .product-info {
+            padding: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #0066cc;
+        }
+
+        .product-price {
+            font-weight: bold;
+            color: #2e7d32;
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .product-meta {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .add-to-cart {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .add-to-cart:hover {
+            background-color: #388e3c;
+        }
+
+        .add-to-cart:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        /* ==================== FOOTER STYLES ==================== */
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            padding: 3rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .footer-section h3 {
+            color: #ff9800;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .footer-section p, 
+        .footer-section li {
+            margin-bottom: 0.8rem;
+            color: #ecf0f1;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section a {
+            color: #ecf0f1;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-section a:hover {
+            color: #ff9800;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background-color: #34495e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            background-color: #ff9800;
+            transform: translateY(-3px);
+        }
+
+        /* ==================== AUTHENTICATION MODAL ==================== */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .auth-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .auth-title {
+            margin-bottom: 1.5rem;
+            color: #0066cc;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .auth-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .auth-btn:hover {
+            background-color: #0055aa;
+        }
+
+        .error-message {
+            color: #e53935;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .toggle-auth {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: #0066cc;
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* ==================== WELCOME PAGE ==================== */
+        .welcome-page {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    overflow: hidden;
+}
+
+.welcome-container {
+    width: 65%;
+    height: 100%;
+    background-color: rgba(10, 10, 10, 0.15); /* Semi-transparent white */
+    backdrop-filter: blur(5px); /* Adds a nice blur effect to the background */
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.video-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.video-background video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+}
+
+/* Update existing welcome page styles to work with new container */
+.welcome-page h1 {
+    color: #0066cc;
+    margin-bottom: 1.5rem;
+    font-size: 3rem;
+    text-align: left;
+}
+
+.features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin: 2rem 0;
+    opacity: 1; /* Ensure parent is visible */
+}
+
+.feature {
+    flex: 1;
+    min-width: 200px;
+    padding: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    transition: all 0.3s;
+    backdrop-filter: blur(2px);
+    opacity: 0; /* Start invisible */
+    transform: translateX(-20px); /* Start slightly to the left */
+    animation: fadeInSlide 0.8s forwards;
+}
+
+.feature:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    
+}
+
+.feature h3 {
+    color: #0066cc;
+    margin-bottom: 0.8rem;
+}
+
+/* Individual delay for each feature */
+.feature-1 { animation-delay: 0.20s; }
+.feature-2 { animation-delay: 0.30; }
+.feature-3 { animation-delay: 0.40s; }
+.feature-4 { animation-delay: 0.50s; }
+
+/* Animation keyframes */
+@keyframes fadeInSlide {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Keep existing hover effects */
+.feature:hover {
+    transform: translateY(-5px) translateX(0); /* Remove X translation on hover */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+.about-section {
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+    color: #333;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 1.5rem;
+    border-radius: 8px;
+    backdrop-filter: blur(2px);
+}
+
+.about-section h2 {
+    color: #0066cc;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.button-container {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.enter-shop-btn {
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s;
+    position: relative;
+   
+}
+
+.enter-shop-btn::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border: 2px solid transparent;
+    border-radius: 6px; /* Slightly larger than button radius */
+    z-index: -1;
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0% {
+        border-color: rgba(255, 255, 255, 0);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+    50% {
+        border-color: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 0 10px 2px rgba(255, 255, 255, 0.4);
+    }
+    100% {
+        border-color: rgba(255, 255, 255, 0);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+.enter-shop-btn:hover {
+    background-color: #0055aa;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.enter-shop-btn:hover::before {
+    animation: none;
+    border-color: rgba(198, 12, 12, 0.8);
+    box-shadow: 0 0 15px 3px rgba(255, 255, 255, 0.6);
+}
+
+        /* ==================== ADMIN VIEW ==================== */
+        .admin-view {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .admin-header {
+            background-color: #1a237e;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-left h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .header-right {
+            font-weight: bold;
+        }
+
+        .admin-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .admin-sidebar {
+            background-color: #303f9f;
+            width: 250px;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .sidebar-btn {
+            background-color: #3949ab;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar-btn:hover {
+            background-color: #5c6bc0;
+        }
+
+        .logout-btn {
+            margin-top: auto;
+            background-color: #d32f2f;
+        }
+
+        .logout-btn:hover {
+            background-color: #f44336;
+        }
+
+        .admin-content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+            background-color: #f5f5f5;
+        }
+
+        /* Inventory Management */
+        .inventory-controls {
+            display: flex;
+            justify-content: space-between;
+            margin: 2rem 0;
+            gap: 2rem;
+        }
+
+        .inventory-btn {
+            background-color: #3949ab;
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            flex: 1;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .inventory-btn:hover {
+            background-color: #5c6bc0;
+            transform: translateY(-2px);
+        }
+
+        .inventory-form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+            max-width: 600px;
+        }
+
+        .inventory-form h3 {
+            color: #1a237e;
+            margin-bottom: 1.5rem;
+        }
+
+        .inventory-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .inventory-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .inventory-form input,
+        .inventory-form select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .submit-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 1rem;
+        }
+
+        .cancel-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Booking Management */
+        .bookings-table-container {
+            margin-top: 2rem;
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .bookings-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .bookings-table th, 
+        .bookings-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .bookings-table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        /* Product Collection Management */
+        .orders-list {
+            margin-top: 1.5rem;
+        }
+
+        .order-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .products-list {
+            margin: 0.5rem 0;
+            padding-left: 1rem;
+        }
+
+        .product-item {
+            margin-bottom: 0.3rem;
+        }
+
+        .collected-badge {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        .no-results {
+            color: #666;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        /* ==================== CART PAGE ==================== */
+        .cart-page {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 2rem;
+        }
+
+        .cart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .cart-container {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .cart-items {
+            flex: 2;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .cart-item img {
+            width: 120px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .item-details {
+            flex: 1;
+        }
+
+        .remove-btn {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .checkout-section {
+            flex: 1;
+        }
+
+        .checkout-form {
+            background-color: #f5f5f5;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .checkout-form h2 {
+            margin-bottom: 1.5rem;
+            color: #0066cc;
+        }
+
+        .checkout-form .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .checkout-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        .checkout-form input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .checkout-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 1rem;
+            font-size: 1rem;
+        }
+
+        .empty-cart {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .total-price {
+            margin: 1.5rem 0;
+            padding: 1rem;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .total-price h3 {
+            color: #0066cc;
+            margin: 0;
+        }
+
+        /* ==================== USER TYPE SELECTION ==================== */
+        .user-type-btns {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .user-type-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            width: 120px;
+            text-align: center;
+        }
+
+        .user-type-btn:hover {
+            background-color: #0055aa;
+            transform: translateY(-2px);
+        }
+
+        .user-type-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ==================== CAROUSEL STYLES ==================== */
+        .carousel-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            min-height: 440px; /* Restored original min-height */
+            margin: 2rem 0;
+            width: 100%;
+        }
+        
+        .products-carousel {
+            display: flex;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            gap: 2rem;
+            padding: 1rem 0;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            width: calc(100% - 80px); /* Restored original width calculation */
+        }
+        
+        .products-carousel::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Specific product card styling for carousel */
+        .products-carousel .product-card {
+            flex: 0 0 280px; /* Fixed width, no grow/shrink */
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            height: auto; /* Let height adjust naturally */
+        }
+        
+        /* Carousel navigation buttons */
+        .carousel-btn {
+            background-color: rgba(0, 102, 204, 0.7);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .carousel-btn:hover {
+            background-color: rgba(0, 102, 204, 1);
+            transform: scale(1.1);
+        }
+        
+        .carousel-btn.prev {
+            margin-right: 10px; /* Restored original margin */
+        }
+        
+        .carousel-btn.next {
+            margin-left: 10px; /* Restored original margin */
+        }
+        
+        /* Hide grid when carousel is active */
+        .products-grid {
+            display: none;
+        }
+
+        /* ==================== BOOKING FORM ==================== */
+        .booking-form-container {
+            width: 100%;
+            padding: 2rem 0;
+            background-color: rgb(249, 163, 58);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 0;
+        }
+
+        .booking-form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .booking-form h2 {
+            color: #0066cc;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .booking-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .booking-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .booking-form input[type="text"],
+        .booking-form input[type="tel"],
+        .booking-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .booking-form textarea {
+            min-height: 100px;
+        }
+
+        .services-group {
+            margin: 2rem 0;
+            padding: 1rem;
+            background-color: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .services-group h3 {
+            margin-bottom: 1rem;
+            color: #0066cc;
+        }
+
+        .service-option {
+            display: block;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+        }
+
+        .service-option input {
+            margin-right: 0.5rem;
+        }
+
+        .book-now-btn {
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .book-now-btn:hover {
+            background-color: #0055aa;
+            transform: translateY(-2px);
+        }
+
+        .service-price {
+            color: #0066cc;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+
+        .booking-total {
+            background-color: #f5f5f5;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .booking-total h3 {
+            color: #0066cc;
+            margin-bottom: 0.5rem;
+        }
+
+        .booking-total p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        /* Aquarium size options */
+        .aquarium-size-options {
+            margin-top: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 1rem;
+        }
+
+        .size-option {
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .size-option:hover {
+            background-color: #f5f5f5;
+        }
+
+        .size-option input {
+            margin-right: 0.8rem;
+        }
+
+        .dimensions {
+            color: #666;
+            font-size: 0.9em;
+            margin-left: 0.5rem;
+        }
+
+        /* ==================== RESPONSIVE DESIGN ==================== */
+        @media (max-width: 992px) {
+            header {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .header-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .search-bar input {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            }
+            
+            footer {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .social-links {
+                justify-content: center;
+            }
+            
+            .cart-container {
+                flex-direction: column;
+            }
+            
+            .cart-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .cart-item img {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .user-type-btns {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .user-type-btn {
+                width: 100%;
+            }
+        }
+
+   /* ==================== AQUARIUM BUILDER STYLES ==================== */
+.aquarium-builder-container {
+    display: flex;
+    height: 600px;
+    background-color: rgb(156, 17, 17);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    width: 100%; 
+    margin-top: 1rem; 
+}
+
+.aquarium-controls {
+    width: 300px;
+    padding: 1.5rem;
+    background-color: #f5f5f5;
+    border-right: 1px solid #ddd;
+    overflow-y: auto;
+}
+
+/* Updated size selector styles */
+.aquarium-size-selector {
+    margin: 1.5rem 0;
+}
+
+.aquarium-size-selector h3 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.dimension-input-group {
+    margin-bottom: 0.8rem;
+}
+
+.dimension-input-group label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.dimension-input-group input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.apply-dimensions-btn {
+    width: 100%;
+    padding: 0.7rem;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    transition: background-color 0.3s;
+}
+
+.apply-dimensions-btn:hover {
+    background-color: #0055aa;
+}
+
+/* Remove the old select styles since we're using inputs now */
+.aquarium-size-selector select {
+    display: none;
+}
+
+.aquarium-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.aquarium-actions button {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+#aquarium-container {
+    flex: 1;
+    height: 100%;
+}
+
+/* Cursor styles */
+#aquarium-container {
+    cursor: grab;
+}
+
+#aquarium-container:active {
+    cursor: grabbing;
+}
+
+/* Hide products grid when aquarium builder is active */
+.showAquariumBuilder ~ .products-grid {
+    display: none;
+}
+
+.toggle-water-btn {
+    background-color: #2196F3;
+    color: white;
+}
+
+.toggle-water-btn:hover {
+    background-color: #0b7dda;
+}
+
+    /*for total price output in builder part*/
+    .aquarium-price-display {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #e8f4f8;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.aquarium-price-display h3 {
+    color: #0066cc;
+    margin-bottom: 0.5rem;
+}
+
+.aquarium-price-display p {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* Add to your existing CSS */
+#paypal-aquarium-button-container {
+    margin-top: 1rem;
+    min-height: 35px;
+}
+
+    </style>
+</head>
+
+
+<body>
+    <!-- Main Vue.js Application -->
+<div id="app">
+    <!-- Welcome Page - shown initially -->
+    <div class="welcome-page" v-if="showWelcomePage">
+        <!-- Video Background -->
+        <div class="video-background">
+            <video autoplay muted loop playsinline>
+                <source src="/images/background_video/fish_vide.mp4" type="video/mp4">
+                Your browser does not support HTML5 video.
+            </video>
+        </div>
+        <!-- Main Welcome Content Container -->
+        <div class="welcome-container">
+    
+        <h1>Welcome to The Aquatic Pet Shop</h1>
+        
+        <!-- Features Section -->
+        <div class="features">
+            <div class="feature feature-1">
+                <h3>Custom Aquariums</h3>
+                <p>Design your dream aquarium with our custom building service.</p>
+            </div>
+            <div class="feature feature-2">
+                <h3>Premium Products</h3>
+                <p>Shop our wide selection of fish, plants, and accessories.</p>
+            </div>
+            <div class="feature feature-3">
+                <h3>Maintenance</h3>
+                <p>Book professional aquarium maintenance services.</p>
+            </div>
+            <div class="feature feature-4">
+                <h3>discounts</h3>
+                <p>Discover our range of discounts and best deals.</p>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="about-section">
+            <h2>About Our Shop</h2>
+            <p>We specialize in providing high-quality aquatic fish, beautiful aquarium plants, premium tanks, and all the accessories you need to create your perfect underwater world.</p>
+        </div>
+        
+        <!-- Enter Shop Button -->
+        <div class="button-container">
+            <button class="enter-shop-btn" @click="showAuthModal = true">Enter Shop</button>
+        </div>
+     </div>
+    </div>
+
+    <!-- Authentication Modals -->
+    <div class="auth-modal" v-if="showAuthModal">
+        <!-- User Type Selection (first step) -->
+        <div class="auth-container" v-if="!showLoginForm">
+            <button class="close-btn" @click="showAuthModal = false">×</button>
+            <h2 class="auth-title">Select User Type</h2>
+            <div class="user-type-btns">
+                <button class="user-type-btn" @click="selectUserType('admin')">Admin</button>
+                <button class="user-type-btn" @click="selectUserType('customer')">Customer</button>
+            </div>
+        </div>
+
+        <!-- Admin Login Form -->
+        <div class="auth-container" v-else-if="userType === 'admin'">
+            <button class="close-btn" @click="showAuthModal = false">×</button>
+            <h2 class="auth-title">Admin Login</h2>
+            <form class="auth-form" @submit.prevent="handleLogin">
+                <div class="form-group">
+                    <label for="admin-username">Username</label>
+                    <input type="text" id="admin-username" v-model="adminCredentials.username" required>
+                    <div class="error-message" v-if="errors.username">{{ errors.username }}</div>
+                </div>
+                <div class="form-group">
+                    <label for="admin-password">Password</label>
+                    <input type="password" id="admin-password" v-model="adminCredentials.password" required>
+                    <div class="error-message" v-if="errors.password">{{ errors.password }}</div>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+        </div>
+
+        <!-- Customer Authentication (Login/Signup) -->
+        <div class="auth-container" v-else>
+            <button class="close-btn" @click="showAuthModal = false">×</button>
+            <h2 class="auth-title">{{ isSignup ? 'Customer Signup' : 'Customer Login' }}</h2>
+            <form class="auth-form" @submit.prevent="isSignup ? handleSignup() : handleLogin()">
+                <div class="form-group">
+                    <label for="customer-username">Username</label>
+                    <input type="text" id="customer-username" v-model="customerCredentials.username" required>
+                    <div class="error-message" v-if="errors.username">{{ errors.username }}</div>
+                </div>
+                <div class="form-group">
+                    <label for="customer-password">Password</label>
+                    <input type="password" id="customer-password" v-model="customerCredentials.password" required>
+                    <div class="error-message" v-if="errors.password">{{ errors.password }}</div>
+                </div>
+                <div class="form-group" v-if="isSignup">
+                    <label for="customer-email">Email</label>
+                    <input type="email" id="customer-email" v-model="customerCredentials.email" required>
+                </div>
+                <button type="submit" class="auth-btn">{{ isSignup ? 'Signup' : 'Login' }}</button>
+                <div class="toggle-auth">
+                    <button type="button" class="toggle-btn" @click="isSignup = !isSignup">
+                        {{ isSignup ? 'Already have an account? Login' : 'Need an account? Signup' }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Shop Page (shown after authentication) -->
+    <div v-if="!showWelcomePage && isAuthenticated && !isAdminView">
+        <!-- Shop Header with navigation -->
+        <header>
+            <div class="logo">Aquatic Pet Shop</div>
+            <div class="nav-buttons">
+                <button class="nav-btn" @click="changeCategory('plant')">Aquatic Plants</button>
+                <button class="nav-btn" @click="changeCategory('fish')">Fishes</button>
+                <button class="nav-btn" @click="changeCategory('accessory')">Accessories</button>
+                <button class="nav-btn" @click="changeCategory('aquarium')">Build Your Aquarium</button>
+                <button class="nav-btn" @click="changeCategory('bookings')">Bookings</button>
+                <button class="nav-btn" @click="changeCategory('decoration')">Decorations</button>
+            </div>
+            <div class="header-controls">
+                <div class="search-bar">
+                    <input type="text" v-model="searchQuery" placeholder="Search Products..." @input="searchLessons">
+                </div>
+                <button class="cart-btn" @click="handleCartPage" :disabled="cart.length === 0">
+                    Cart ({{ cart.length }})
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main>
+            <!-- Sorting controls for products -->
+            <div class="sort-controls" v-if="!showBookingForm  && !showAquariumBuilder">
+                <div class="sort-group">
+                    <label>Sort by:</label>
+                    <label><input type="radio" v-model="srtBy" value="subject"> name</label>
+                    <label><input type="radio" v-model="srtBy" value="price"> Price</label>
+                    <label><input type="radio" v-model="srtBy" value="location"> best deals</label>
+                </div>
+            </div>
+
+            <!-- Product Carousel -->
+            <div class="carousel-container" v-if="!showBookingForm  && !showAquariumBuilder">
+                <button class="carousel-btn prev" @click="scrollCarousel(-1)">❮</button>
+                <div class="products-carousel" ref="carousel">
+                    <div class="product-card" v-for="(product, index) in filteredProducts" :key="index">
+                        <img class="product-img" 
+                            :src="'http://localhost:3000/images/' + product.type + '/' + product.img" 
+                            :alt="product.subject">
+                        <div class="product-info">
+                            <h3 class="product-title">{{ product.subject }}</h3>
+                            <p class="product-price">${{ product.price }}</p>
+                            <p class="product-meta"><strong>deal:</strong> {{ product.location }}</p>
+                            <p class="product-meta"><strong>Available:</strong> {{ product.avail }}</p>
+                            <button class="add-to-cart" @click="add(product)" :disabled="product.avail === 0">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-btn next" @click="scrollCarousel(1)">❯</button>
+            </div>
+            
+
+            <!-- Aquarium Builder -->
+<div v-if="showAquariumBuilder" class="aquarium-builder-container">
+    <div class="aquarium-controls">
+        <h2>Build Your Aquarium</h2>
+        
+        <div class="aquarium-size-selector">
+            <h3>Custom Aquarium Dimensions</h3>
+            <div class="dimension-input">
+                <label>Length:</label>
+                <input type="number" v-model="aquariumLength" min="1" step="0.1">
+            </div>
+            <div class="dimension-input">
+                <label>Breadth:</label>
+                <input type="number" v-model="aquariumBreadth" min="1" step="0.1">
+            </div>
+            <div class="dimension-input">
+                <label>Height:</label>
+                <input type="number" v-model="aquariumHeight" min="1" step="0.1">
+            </div>
+            <button @click="applyCustomDimensions">Apply Dimensions</button>
+        </div>
+        
+        
+        <div class="aquarium-actions">
+            <button class="toggle-water-btn" @click="toggleWater">
+                {{ showWater ? 'Remove Water' : 'Add Water' }}
+            </button>
+            <div class="aquarium-price-display">
+                <h3>Total Price: ${{ aquariumTotalPrice }}</h3>
+                <p>Dimensions: {{ aquariumLength }}m × {{ aquariumBreadth }}m × {{ aquariumHeight }}m</p>
+                <div id="paypal-aquarium-button-container"></div>
+                <div class="error-message" v-if="aquariumPaypalError">{{ aquariumPaypalError }}</div>
+            </div>    
+        </div>
+    </div>
+    
+    <!-- The 3D view will be rendered here by Three.js -->
+</div>
+
+
+            <!-- Booking Form -->
+            <div class="booking-form-container" v-if="showBookingForm">
+                <div class="booking-form">
+                    <h2>Aquarium Service Booking</h2>
+                    <form @submit.prevent="submitBooking">
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" id="address" v-model="bookingForm.address" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="telephone">Telephone Number</label>
+                            <input type="tel" 
+                                id="telephone" 
+                                v-model="bookingForm.telephone" 
+                                @input="formatTelephone"
+                                maxlength="8"
+                                required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description">Service Description</label>
+                            <textarea id="description" v-model="bookingForm.description" rows="4"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bookingDate">Preferred Service Date:</label>
+                            <input type="date" 
+                                id="bookingDate" 
+                                v-model="bookingForm.date" 
+                                :min="minDate"
+                                required>
+                        </div>
+                        
+                        <div class="services-group">
+                            <h3>Services Needed:</h3>
+                            <label class="service-option">
+                                <input type="checkbox" v-model="bookingForm.services.maintenance">
+                                Regular Maintenance <span class="service-price">(${{ servicePrices.maintenance }})</span>
+                            </label>
+                            <label class="service-option">
+                                <input type="checkbox" v-model="bookingForm.services.cleaning">
+                                Tank Cleaning <span class="service-price">(${{ servicePrices.cleaning }})</span>
+                            </label>
+                            <label class="service-option">
+                                <input type="checkbox" v-model="bookingForm.services.filterChange">
+                                Filter Change/Service <span class="service-price">(${{ servicePrices.filterChange }})</span>
+                            </label>
+                            <label class="service-option">
+                                <input type="checkbox" v-model="bookingForm.services.pumpRepairs">
+                                Pump Repairs <span class="service-price">(${{ servicePrices.pumpRepairs }})</span>
+                            </label>
+                        </div>
+
+                        <!-- Aquarium Size Dropdown -->
+                        <div class="form-group">
+                            <label>Give an estimate of your aquarium size</label>
+                            <div class="aquarium-size-options">
+                                <div v-for="size in aquariumSizes" :key="size.value" class="size-option">
+                                    <input type="radio" 
+                                        :id="'size-' + size.value"
+                                        v-model="bookingForm.aquariumSize" 
+                                        :value="size.value">
+                                    <label :for="'size-' + size.value">
+                                        {{ size.label }} <span class="dimensions">({{ size.dimensions }})</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error messages -->
+                        <div class="error-message" v-if="formErrors.telephone">
+                            {{ formErrors.telephone }}
+                        </div>
+                        <div class="error-message" v-if="formErrors.address">
+                            {{ formErrors.address }}
+                        </div>
+                        <div class="error-message" v-if="formErrors.services">
+                            {{ formErrors.services }}
+                        </div>
+
+                        <!-- Total Price Display -->
+                        <div class="booking-total">
+                            <h3>Estimated Total: ${{ bookingTotal.toFixed(2) }}</h3>
+                            <p v-if="selectedServicesCount > 0">
+                                (Base: ${{ baseServicePrice.toFixed(2) }} × {{ sizeMultiplier }}x size multiplier)
+                            </p>
+                        </div>
+
+                        <!-- PayPal Booking Button -->
+                        <div id="paypal-booking-button-container"></div>
+                        <div class="error-message" v-if="paypalError">{{ paypalError }}</div>
+                    </form>
+                </div>
+            </div>
+        </main>
+        
+        <!-- Shopping Cart Page (shown when cart is open) -->
+        <div v-if="showCart" class="cart-page">
+            <div class="cart-header">
+                <h1>Shopping Cart</h1>
+                <button @click="togglePage" class="back-btn">Back to Products</button>
+            </div>
+            
+            <div class="cart-container">
+                <div class="cart-items">
+                    <div v-if="cart.length === 0" class="empty-cart">
+                        <p>Your cart is empty.</p>
+                    </div>
+                    <div v-else>
+                        <div class="cart-item" v-for="(item, index) in cart" :key="index">
+                            <img :src="'http://localhost:3000/images/' + item.type + '/' + item.img" :alt="item.subject">
+                            <div class="item-details">
+                                <h3>{{ item.subject }}</h3>
+                                <p><strong>Price:</strong> ${{ item.price }}</p>
+                                <p><strong>deal:</strong> {{ item.location }}</p>
+                                <p><strong>Quantity:</strong> {{ item.bookedSeats }}</p>
+                            </div>
+                            <button class="remove-btn" @click="remove(index)">Remove</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="checkout-section">
+                    <div class="checkout-form">
+                        <h2>Checkout</h2>
+                        <div class="form-group">
+                            <label for="name">Name:</label>
+                            <input type="text" id="name" v-model="name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone:</label>
+                            <input type="text" id="phone" v-model="phone" placeholder="Enter your phone number">
+                        </div>
+                        <div class="total-price">
+                            <h3>Total Price: ${{ totalPrice.toFixed(2) }}</h3>
+                        </div>
+
+                        <!-- PayPal Button Container -->
+                        <div id="paypal-button-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Section -->
+        <footer>
+            <div class="footer-section">
+                <h3>About Us</h3>
+                <p>Your premier destination for aquatic life since 2010. Explore our curated selection of fish, plants, and aquarium supplies.
+                Custom-build your dream aquarium, enjoy exclusive discounts, discover gift options
+                and book professional maintenance services—all in one place.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <ul>
+                    <li>Email: info@aquaticpetshop.com</li>
+                    <li>Phone: (230) 576-2590</li>
+                    <li>Address: Ave lotus quatre-bornes</li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Customer Service</h3>
+                <ul>
+                    <li><a href="#">Returns & Exchanges</a></li>
+                    <li><a href="#">bookings Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Connect With Us</h3>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-youtube"></i></a>
+                </div>
+                <p>Subscribe to our newsletter for exclusive offers!</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Admin View (shown when admin logs in) -->
+    <div v-if="isAdminView" class="admin-view">
+        <!-- Admin Header -->
+        <header class="admin-header">
+            <div class="header-left">
+                <h1>Aquatic Pet Shop</h1>
+            </div>
+            <div class="header-right">
+                <span>Admin Page</span>
+            </div>
+        </header>
+
+        <!-- Admin Main Content Area -->
+        <div class="admin-container">
+            <!-- Sidebar Navigation -->
+            <nav class="admin-sidebar">
+                <button class="sidebar-btn" @click="activeView = 'inventory'"
+                    :class="{ active: activeView === 'inventory' }">
+                    Manage Inventory
+                </button>
+                <button class="sidebar-btn" @click="activeView = 'bookings'"
+                    :class="{ active: activeView === 'bookings' }">
+                    Manage Bookings
+                </button>
+                <button class="sidebar-btn" @click="activeView = 'products'"
+                    :class="{ active: activeView === 'products' }">
+                    Manage Product Collection
+                </button>
+                <button class="sidebar-btn" @click="activeView = 'analytics'"
+                    :class="{ active: activeView === 'analytics' }">
+                    View Graphical Analysis
+                </button>
+                <button class="sidebar-btn logout-btn" @click="logout">
+                    Logout
+                </button>
+            </nav>
+
+            <!-- Admin Content Area -->
+            <main class="admin-content">
+                <!-- Default Dashboard -->
+                <div v-if="!activeView" class="dashboard-default">
+                    <h2>Admin Dashboard</h2>
+                    <p>Welcome to the Aquatic Pet Shop Admin Panel</p>
+                </div>
+
+                <!-- Manage Bookings Section -->
+                <div v-else-if="activeView === 'bookings'">
+                    <h2>Manage Bookings</h2>
+                    <div class="inventory-controls">
+                        <button class="inventory-btn" @click="viewAllBookings">View All Bookings</button>
+                        <button class="inventory-btn" @click="viewUnattendedBookings">View Unattended Bookings</button>
+                        <button class="inventory-btn" @click="viewPastBookings">View Past Bookings</button>
+
+                        <!-- Search by Telephone -->
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <input type="text" v-model="telephoneSearch" 
+                                @keyup.enter="searchByTelephone"
+                                placeholder="Search by telephone number"
+                                @input="validateTelephoneInput">
+                            <button class="submit-btn" @click="searchByTelephone" style="margin-left: 0.5rem;">Search</button>
+                        </div>
+                    </div>
+
+                    <!-- Bookings Table -->
+                    <div class="bookings-table-container">
+                        <table class="bookings-table">
+                            <thead>
+                                <tr>
+                                    <th>Address</th>
+                                    <th>Telephone</th>
+                                    <th>Description</th>
+                                    <th>Services</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(booking, index) in bookings" :key="index">
+                                    <td>{{ booking.address }}</td>
+                                    <td>{{ booking.telephone }}</td>
+                                    <td>{{ booking.description }}</td>
+                                    <td>
+                                        <div v-for="(value, service) in booking.services" :key="service">
+                                            {{ service }}: {{ value ? 'Yes' : 'No' }}
+                                        </div>
+                                    </td>
+                                    <td>{{ new Date(booking.date).toLocaleString() }}</td>
+                                    <td>
+                                        <span :class="'status-' + booking.status">{{ booking.status }}</span>
+                                    </td>
+                                    <td>
+                                        <button v-if="booking.status === 'pending'"
+                                                @click="updateBookingStatus(booking._id, 'completed')"
+                                                class="submit-btn">
+                                            Complete
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Manage Product Collection Section -->
+                <div v-else-if="activeView === 'products'">
+                    <h2>Product Collection Management</h2>
+
+                    <div class="inventory-controls">
+                        <button class="inventory-btn" @click="showCollectionSearch = true">
+                            Product Collection
+                        </button>
+                        <button class="inventory-btn" @click="viewCollectedProducts">
+                            View Collected Products
+                        </button>
+                        <button class="inventory-btn" @click="viewPendingProducts">
+                            View Pending Products
+                        </button>
+                    </div>
+                    
+                    <!-- Product Collection Form -->
+                    <div class="inventory-form" v-if="showCollectionSearch || showCollectedProducts || showPendingProducts">
+                        <h3 v-if="showCollectionSearch">Product Collection</h3>
+                        <h3 v-else-if="showCollectedProducts">Collected Products</h3>
+                        <h3 v-else>Pending Products</h3>
+
+                        <!-- Search form - only show for Product Collection -->
+                        <div v-if="showCollectionSearch">
+                            <div class="form-group">
+                                <label>Search Customer Name:</label>
+                                <input type="text" v-model="customerSearchQuery" @keyup.enter="searchCustomerOrders">
+                            </div>
+                            <button class="submit-btn" @click="searchCustomerOrders">Search</button>
+                        </div>
+                        
+                        <button class="cancel-btn" @click="closeCollectionSearch">Close</button>
+                        
+                        <!-- Display search results -->
+                        <div v-if="customerOrders.length > 0" class="orders-list">
+                            <div v-for="(order, index) in customerOrders" :key="order._id" class="order-card">
+                                <h4>Order #{{ index + 1 }}</h4>
+                                <p><strong>Customer:</strong> {{ order.name }}</p>
+                                <p><strong>Phone:</strong> {{ order.phone }}</p>
+                                
+                                <div class="products-list">
+                                    <div v-for="(lesson, i) in order.lessons" :key="i" class="product-item">
+                                        <p>{{ lesson.subject }} (Qty: {{ lesson.bookedSeats }})</p>
+                                    </div>
+                                </div>
+                                
+                                <p><strong>Status:</strong> {{ order.status || 'not collected' }}</p>
+                                
+                                <button v-if="(!order.status || order.status === 'not collected') && !viewingPending" 
+                                    class="submit-btn" 
+                                    @click="markAsCollected(order._id)">
+                                    Mark as Collected
+                                </button>
+                                <span v-else-if="order.status === 'collected'" class="collected-badge">✓ Collected</span>
+                            </div>
+                        </div>
+                        
+                        <!-- No Results Messages -->
+                        <p v-if="(showCollectionSearch && customerSearchQuery && customerOrders.length === 0)" 
+                            class="no-results">
+                            No orders found for "{{ customerSearchQuery }}"
+                        </p>
+                        <p v-else-if="(showCollectedProducts && customerOrders.length === 0)" 
+                            class="no-results">
+                            No collected orders found
+                        </p>
+                        <p v-else-if="(showPendingProducts && customerOrders.length === 0)" 
+                            class="no-results">
+                            No pending orders found
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Graphical Analysis Section -->
+                <div v-else-if="activeView === 'analytics'">
+                    <h2>Manage aquarium builds</h2>
+                </div>
+
+                <!-- Inventory Management Section -->
+                <div v-else-if="activeView === 'inventory'">
+                    <h2>Inventory Management</h2>
+                    <div class="inventory-controls">
+                        <button class="inventory-btn" @click="showAddProduct = true">Add Product</button>
+                        <button class="inventory-btn" @click="showRemoveProduct = true">Remove Product</button>
+                        <button class="inventory-btn" @click="showEditProduct = true">Edit Product</button>
+                    </div>
+
+                    <!-- Add Product Form -->
+                    <div class="inventory-form" v-if="showAddProduct">
+                        <h3>Add New Product</h3>
+                        <form @submit.prevent="addProduct">
+                            <div class="form-group">
+                                <label>Product Name:</label>
+                                <input type="text" v-model="newProduct.subject" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Price:</label>
+                                <input type="number" step="0.01" v-model="newProduct.price" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Type:</label>
+                                <select v-model="newProduct.type" required>
+                                    <option value="fish">Fish</option>
+                                    <option value="plant">Plant</option>
+                                    <option value="accessory">Accessory</option>
+                                    <option value="decoration">Decoration</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Image Filename:</label>
+                                <input type="text" v-model="newProduct.img" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Initial Stock:</label>
+                                <input type="number" v-model="newProduct.avail" required>
+                            </div>
+                            <button type="submit" class="submit-btn">Add Product</button>
+                            <button type="button" class="cancel-btn" @click="showAddProduct = false">Cancel</button>
+                        </form>
+                    </div>
+
+                    <!-- Remove Product Form -->
+                    <div class="inventory-form" v-if="showRemoveProduct">
+                        <h3>Remove Product</h3>
+                        <form @submit.prevent="findProductToRemove">
+                            <div class="form-group">
+                                <label>Enter Product Name:</label>
+                                <input type="text" v-model="productNameToRemove" required>
+                            </div>
+                            <button type="submit" class="submit-btn">Find Product</button>
+                            <button type="button" class="cancel-btn" @click="showRemoveProduct = false">Cancel</button>
+                        </form>
+                        
+                        <div v-if="productFoundToRemove" class="product-to-remove">
+                            <h4>Found Product:</h4>
+                            <p><strong>Name:</strong> {{ productFoundToRemove.subject }}</p>
+                            <p><strong>Type:</strong> {{ productFoundToRemove.type }}</p>
+                            <p><strong>Price:</strong> ${{ productFoundToRemove.price }}</p>
+                            <button class="submit-btn" @click="removeProduct">Confirm Remove</button>
+                        </div>
+                        
+                        <div v-if="removeProductError" class="error-message">
+                            {{ removeProductError }}
+                        </div>
+                    </div>
+
+                    <!-- Edit Product Form -->
+                    <div class="inventory-form" v-if="showEditProduct">
+                        <h3>Edit Product</h3>
+                        <form @submit.prevent="findProductToEdit">
+                            <div class="form-group">
+                                <label>Enter Product Name:</label>
+                                <input type="text" v-model="productNameToEdit" required>
+                            </div>
+                            <button type="submit" class="submit-btn">Find Product</button>
+                            <button type="button" class="cancel-btn" @click="showEditProduct = false">Cancel</button>
+                        </form>
+                        
+                        <form v-if="editingProduct" @submit.prevent="updateProduct">
+                            <div class="form-group">
+                                <label>Product Name:</label>
+                                <input type="text" v-model="editingProduct.subject" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Price:</label>
+                                <input type="number" step="0.01" v-model="editingProduct.price" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Type:</label>
+                                <select v-model="editingProduct.type" required>
+                                    <option value="fish">Fish</option>
+                                    <option value="plant">Plant</option>
+                                    <option value="accessory">Accessory</option>
+                                    <option value="decoration">Decoration</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Image Filename:</label>
+                                <input type="text" v-model="editingProduct.img">
+                            </div>
+                            <div class="form-group">
+                                <label>Stock:</label>
+                                <input type="number" v-model="editingProduct.avail" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Discount Status:</label>
+                                <select v-model="editingProduct.location">
+                                    <option value="no discount">No Discount</option>
+                                    <option value="10% discount">10% Discount</option>
+                                    <option value="20% discount">20% Discount</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="submit-btn">Update Product</button>
+                        </form>
+                        
+                        <div v-if="editProductError" class="error-message">
+                            {{ editProductError }}
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+
+                // for build your aquarium part
+
+                aquariumDimensions: null,
+                aquariumLength: 5,
+                aquariumBreadth: 3,
+                aquariumHeight: 4,
+                showAquariumBuilder: false,
+                aquariumScene: null,
+                aquariumCamera: null,
+                aquariumRenderer: null,
+                aquariumControls: null,
+                aquariumSize: 'medium', // small, medium, large 
+                //toggle water button
+                showWater: true, 
+                water: null,
+                // for price display of aquarium
+                pricePerCubicUnit: 10,  
+                // paypal for aquarium building
+                aquariumPaypalError: '',
+                aquariumPaypalButton: null,
+                aquariumPaypalProcessing: false,   
+
+
+
+                // PayPal for bookings
+                paypalBookingButton: null,
+                paypalError: '',
+                paypalProcessing: false,
+
+                // PayPal for products 
+                paypalLoaded: false,
+                paymentProcessing: false,
+
+                // Admin product collection management
+                showCollectionSearch: false,
+                showCollectedProducts: false,
+                showPendingProducts: false,
+                customerSearchQuery: '',
+                customerOrders: [],
+                selectedOrder: null,
+                viewingPending: false,
+
+                // Admin booking management
+                bookings: [], // Array to store bookings
+                bookingStatusFilter: 'all', // To track which filter is active
+                telephoneSearch: '',
+
+                // Admin Inventory management
+                showAddProduct: false,
+                showRemoveProduct: false,
+                showEditProduct: false,
+                allProducts: [],
+                newProduct: {
+                    subject: '',
+                    price: 0,
+                    location: 'no discount',
+                    type: 'fish',
+                    img: '',
+                    avail: 0
+                },
+                // For Remove Product
+                productNameToRemove: '', // For input field
+                productFoundToRemove: null, // Stores found product
+                removeProductError: '', // Error message
+        
+                // For Edit Product
+                productNameToEdit: '', // For input field
+                editingProduct: null, // Stores product being edited
+                editProductError: '', // Error message
+                
+                // Booking form data
+                showBookingForm: false,
+                bookingForm: {
+                    address: '',
+                    telephone: '',
+                    description: '',
+                    date: '',
+                    aquariumSize: 'big',
+                    services: {
+                        maintenance: true,
+                        cleaning: false,
+                        filterChange: false,
+                        pumpRepairs: false
+                    }
+                },
+                minDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
+
+                formErrors: {
+                    telephone: '',
+                    address: '',
+                    services: '',
+                    aquariumSize: ''
+                },
+
+                servicePrices: {
+                    maintenance: 100,
+                    cleaning: 75,
+                    filterChange: 50,
+                    pumpRepairs: 120
+                },
+                sizeMultipliers: {
+                    small: 1,
+                    medium: 3,
+                    big: 5,
+                    pond: 8
+                },
+
+                aquariumSizes: [
+                    { 
+                        value: 'small', 
+                        label: 'Small aquarium', 
+                        dimensions: '1m × 1m / 1m²' 
+                    },
+                    { 
+                        value: 'medium', 
+                        label: 'Medium aquarium', 
+                        dimensions: '1.5m × 1m / 1.5m²' 
+                    },
+                    { 
+                        value: 'big', 
+                        label: 'Big aquarium', 
+                        dimensions: '2m × 1m / 2m²' 
+                    },
+                    { 
+                        value: 'pond', 
+                        label: 'Pond', 
+                        dimensions: '3m × 2m / 6m²' 
+                    }
+                ],
+
+                // Original shop data
+                activeCategory: 'fish', // Default category
+                isAdminView: false,
+                activeView: '',
+                list: [],
+                cart: [],
+                srtBy: 'subject',
+                showCart: false,
+                name: '',
+                phone: '',
+                searchQuery: '',
+                showWelcomePage: true,
+                originalLessons: [],
+
+                // Auth data
+                showAuthModal: false,
+                userType: '', // 'admin' or 'customer'
+                showLoginForm: false,
+                isSignup: false,
+                isAuthenticated: false,
+                adminCredentials: {
+                    username: '',
+                    password: ''
+                },
+                customerCredentials: {
+                    username: '',
+                    password: '',
+                    email: ''
+                },
+                errors: {
+                    username: '',
+                    password: ''
+                }
+            };
+        },
+
+        mounted() {
+            // Initialize PayPal when booking form is shown
+            this.$watch('showBookingForm', (newVal) => {
+                if (newVal) {
+                    this.$nextTick(() => {
+                        // Small delay to ensure DOM is ready
+                        setTimeout(() => {
+                            this.initPayPalBookingButton();
+                        }, 500);
+                    });
+                }
+            });
+
+            // Initialize PayPal when cart is shown
+            this.$watch('showCart', (newVal) => {
+                if (newVal && this.cart.length > 0) {
+                    this.renderPayPalButton();
+                }
+            });
+            
+            if (this.showCart && this.cart.length > 0) {
+                this.renderPayPalButton();
+            }
+
+            this.activeView = '';
+
+            // Add keyboard event listener for carousel navigation
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') {
+                    this.scrollCarousel(-1);
+                } else if (e.key === 'ArrowRight') {
+                    this.scrollCarousel(1);
+                }
+            });
+
+            // Fetch initial product data
+            fetch('http://localhost:3000/api/product_info')
+                .then(response => response.json())
+                .then(data => {
+                    this.list = data;
+                    this.originalLessons = [...data];
+                })
+                .catch(error => console.error('Error fetching lessons:', error));
+        },
+
+        computed: {
+            // Sorting for radio buttons (deal, name, price)
+            sorted() {
+                return this.list.slice().sort((a, b) => {
+                    let x = a[this.srtBy];
+                    let y = b[this.srtBy];
+
+                    if (this.srtBy === 'price') {
+                        x = Number(x);
+                        y = Number(y);
+                    } else if (typeof x === 'string' && typeof y === 'string') {
+                        x = x.toLowerCase();
+                        y = y.toLowerCase();
+                    }
+                    
+                    return x < y ? -1 : x > y ? 1 : 0;
+                });
+            },
+
+            // Calculate total price of products in cart
+            totalPrice() {
+                return this.cart.reduce((total, item) => {
+                    const discount = this.getDiscountPercentage(item.location);
+                    const discountedPrice = item.price * (1 - discount/100);
+                    return total + (discountedPrice * item.bookedSeats);
+                }, 0);
+            },
+
+            // Filter products by active category
+            filteredProducts() {
+                return this.sorted.filter(product => product.type === this.activeCategory);
+            },
+
+            // Get selected services from booking form
+            selectedServices() {
+                return Object.entries(this.bookingForm.services)
+                .filter(([service, selected]) => selected)
+                .map(([service]) => service);
+            },
+            
+            // Count of selected services
+            selectedServicesCount() {
+                return this.selectedServices.length;
+            },
+            
+            // Calculate base service price
+            baseServicePrice() {
+                return this.selectedServices.reduce((total, service) => {
+                    return total + (this.servicePrices[service] || 0);
+                }, 0);
+            },
+            
+            // Get size multiplier for current aquarium size
+            sizeMultiplier() {
+                return this.sizeMultipliers[this.bookingForm.aquariumSize] || 1;
+            },
+            
+            // Calculate total booking price
+            bookingTotal() {
+                return this.baseServicePrice * this.sizeMultiplier;
+            },
+
+            // below to calculate total price of aquarium in build your aquarium sections
+            aquariumTotalPrice() {
+        if (!this.aquariumDimensions) return 0;
+        const volume = this.aquariumLength * this.aquariumBreadth * this.aquariumHeight;
+        return Math.round(volume * this.pricePerCubicUnit);
+    }
+        },
+
+        watch: {
+            // Watch for changes in booking form to reinitialize PayPal button
+            bookingForm: {
+                deep: true,
+                handler() {
+                    if (this.showBookingForm) {
+                        // Add a small delay to allow form validation to complete
+                        setTimeout(() => {
+                            this.initPayPalBookingButton();
+                        }, 300);
+                    }
+                }
+            },
+            // Watch for booking form visibility changes
+            showBookingForm(newVal) {
+                if (newVal) {
+                    this.$nextTick(() => {
+                        this.initPayPalBookingButton();
+                    });
+                }
+            }
+        },
+
+        //for aquarium cleanup when switching to like decorations 
+        watch: {
+           // Add this to your existing watch section
+    aquariumTotalPrice(newVal) {
+        if (this.showAquariumBuilder) {
+            this.$nextTick(() => {
+                this.initAquariumPayPalButton();
+            });
+        }
+    },
+    showAquariumBuilder(newVal) {
+        if (newVal) {
+            this.$nextTick(() => {
+                this.initAquariumPayPalButton();
+            });
+        } else if (this.aquariumPaypalButton) {
+            this.aquariumPaypalButton.close();
+            this.aquariumPaypalButton = null;
+        }
+    }
+        },
+
+        //before destroy clean up build aquarium page
+        beforeDestroy() {
+            this.cleanupAquariumBuilder();
+            document.removeEventListener('keydown', this.keyboardHandler);
+        },
+
+        methods: {
+            /*****************************************************************
+             * PAYPAL PAYMENT METHODS
+             ****************************************************************/
+            
+            /**
+             * Load PayPal SDK
+             */
+            loadPayPalSDK() {
+                return new Promise((resolve) => {
+                    if (window.paypal) {
+                        resolve();
+                        return;
+                    }
+                    
+                    const script = document.createElement('script');
+                    script.src = `https://www.paypal.com/sdk/js?client-id=AePRwamVS6liMdBwT8Ytz7-j4Ab02xOjpwm4nnmDov22Nuv2rVZuFfej_P3X5-rIu0ctTEAyxMdS08R4&currency=USD`;
+                    script.onload = resolve;
+                    document.head.appendChild(script);
+                });
+            },
+            
+            /**
+             * Render PayPal button for product checkout
+             */
+            async renderPayPalButton() {
+                try {
+                    await this.loadPayPalSDK();
+                    
+                    this.paypalLoaded = true;
+                    this.$nextTick(() => {
+                        paypal.Buttons({
+                            style: {
+                                layout: 'vertical',
+                                color: 'blue',
+                                shape: 'rect',
+                                label: 'paypal'
+                            },
+                            fundingSource: paypal.FUNDING.PAYPAL,
+                            createOrder: (data, actions) => {
+                                // Validate fields before creating order
+                                if (!this.validateCheckoutFields()) {
+                                    return Promise.reject(new Error('Validation failed'));
+                                }
+                                
+                                return actions.order.create({
+                                    purchase_units: [{
+                                        amount: {
+                                            value: this.totalPrice.toFixed(2),
+                                            currency_code: "USD",
+                                            breakdown: {
+                                                item_total: {
+                                                    value: this.totalPrice.toFixed(2),
+                                                    currency_code: "USD"
+                                                }
+                                            }
+                                        },
+                                        items: this.cart.map(item => ({
+                                            name: item.subject,
+                                            unit_amount: {
+                                                value: item.price.toFixed(2),
+                                                currency_code: "USD"
+                                            },
+                                            quantity: item.bookedSeats.toString()
+                                        }))
+                                    }]
+                                });
+                            },
+                            onApprove: async (data, actions) => {
+                                try {
+                                    // Show loading state
+                                    this.paymentProcessing = true;
+                                    
+                                    // Capture the payment
+                                    const details = await actions.order.capture();
+                                    
+                                    // Validate the captured amount matches our total
+                                    const capturedAmount = parseFloat(details.purchase_units[0].payments.captures[0].amount.value);
+                                    if (Math.abs(capturedAmount - this.totalPrice) > 0.01) {
+                                        throw new Error('Payment amount mismatch');
+                                    }
+                                    
+                                    // Process the order using existing checkout logic
+                                    await this.processOrderAfterPayment();
+                                    
+                                    // Redirect to thank you page or show success message
+                                    alert('Payment and order completed successfully!');
+                                } catch (err) {
+                                    console.error('Payment processing error:', err);
+                                    alert('Payment completed but order processing failed. Please contact support.');
+                                } finally {
+                                    this.paymentProcessing = false;
+                                }
+                            },
+                            onError: (err) => {
+                                console.error('PayPal error:', err);
+                                // Don't show alert for validation errors (they're already shown)
+                                if (err.message !== 'Validation failed') {
+                                    alert('An error occurred with PayPal. Please try again or use another payment method.');
+                                }
+                            }
+                        }).render('#paypal-button-container');
+                    });
+                } catch (err) {
+                    console.error('Failed to load PayPal:', err);
+                    this.paypalLoaded = false;
+                }
+            },
+
+            /**
+             * Validate checkout fields (name and phone)
+             */
+            validateCheckoutFields() {
+                const nameValid = /^[a-zA-Z\s]+$/.test(this.name);
+                const phoneValid = /^[0-9]+$/.test(this.phone);
+                
+                if (!nameValid) {
+                    alert('Please enter a valid name (letters only).');
+                    return false;
+                }
+                if (!phoneValid) {
+                    alert('Please enter a valid phone number (numbers only).');
+                    return false;
+                }
+                return true;
+            },
+
+            /**
+             * Process order after successful PayPal payment
+             */
+            async processOrderAfterPayment() {
+                const data = {
+                    name: this.name,
+                    phone: this.phone,
+                    lessons: this.cart.map(item => ({
+                        subject: item.subject,
+                        bookedSeats: item.bookedSeats
+                    }))
+                };
+
+                try {
+                    // First, place the order
+                    const orderResponse = await fetch('http://localhost:3000/api/orders', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (!orderResponse.ok) {
+                        throw new Error('Failed to place the order.');
+                    }
+
+                    // Then update product availability
+                    await Promise.all(this.cart.map(item => {
+                        const updatedAvail = item.avail - item.bookedSeats;
+                        return fetch('http://localhost:3000/api/update_lesson', {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                subject: item.subject,
+                                avail: updatedAvail
+                            })
+                        });
+                    }));
+
+                    // Clear cart and reset form
+                    this.cart = [];
+                    this.name = '';
+                    this.phone = '';
+                    this.showCart = false;
+                } catch (error) {
+                    console.error('Error:', error);
+                    throw error; // Re-throw to be caught by PayPal handler
+                }
+            },
+
+            /**
+             * Manual checkout (alternative to PayPal)
+             */
+            async checkout() {
+                if (!this.validateCheckoutFields()) {
+                    return;
+                }
+                
+                try {
+                    await this.processOrderAfterPayment();
+                    alert('Order placed successfully!');
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Failed to place order. Please try again.');
+                }
+            },
+
+            /*****************************************************************
+             * ADMIN INVENTORY MANAGEMENT METHODS
+             ****************************************************************/
+            
+            /**
+             * Reset admin views to dashboard
+             */
+            resetAdminViews() {
+                this.activeView = ''; // Resets to dashboard view
+                // Reset any form states
+                this.showAddProduct = false;
+                this.showRemoveProduct = false;
+                this.showEditProduct = false;
+            },
+
+            /**
+             * Fetch all products from API
+             */
+            async fetchAllProducts() {
+                try {
+                    const response = await fetch('http://localhost:3000/api/product_info?type=all');
+                    this.allProducts = await response.json();
+                } catch (err) {
+                    console.error('Error fetching products:', err);
+                }
+            },
+            
+            /**
+             * Add a new product
+             */
+            async addProduct() {
+                try {
+                    const response = await fetch('http://localhost:3000/api/product_info', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.newProduct)
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to add product');
+                    
+                    alert('Product added successfully!');
+                    this.showAddProduct = false;
+                    this.newProduct = {
+                        subject: '',
+                        price: 0,
+                        location: 'no discount',
+                        type: 'fish',
+                        img: '',
+                        avail: 0
+                    };
+                    await this.fetchAllProducts();
+                } catch (err) {
+                    console.error('Add product error:', err);
+                    alert('Failed to add product');
+                }
+            },
+            
+            /**
+             * Find product to remove by name
+             */
+            async findProductToRemove() {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/product_info/find?name=${this.productNameToRemove}`);
+                    const data = await response.json();
+                    
+                    if (!response.ok || !data) {
+                        this.removeProductError = 'Product not found';
+                        this.productFoundToRemove = null;
+                    } else {
+                        this.productFoundToRemove = data;
+                        this.removeProductError = '';
+                    }
+                } catch (err) {
+                    this.removeProductError = 'Error finding product';
+                    console.error(err);
+                }
+            },
+
+            /**
+             * Remove a product
+             */
+            async removeProduct() {
+                if (!this.productFoundToRemove) return;
+                
+                try {
+                    const response = await fetch(`http://localhost:3000/api/product_info/${this.productFoundToRemove._id}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to remove product');
+                    
+                    alert('Product removed successfully!');
+                    this.showRemoveProduct = false;
+                    this.productNameToRemove = '';
+                    this.productFoundToRemove = null;
+                    await this.fetchAllProducts();
+                } catch (err) {
+                    this.removeProductError = 'Failed to remove product';
+                    console.error(err);
+                }
+            },
+            
+            /**
+             * Find product to edit by name
+             */
+            async findProductToEdit() {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/product_info/find?name=${this.productNameToEdit}`);
+                    const data = await response.json();
+                    
+                    if (!response.ok || !data) {
+                        this.editProductError = 'Product not found';
+                        this.editingProduct = null;
+                    } else {
+                        this.editingProduct = JSON.parse(JSON.stringify(data)); // Deep copy
+                        this.editProductError = '';
+                    }
+                } catch (err) {
+                    this.editProductError = 'Error finding product';
+                    console.error(err);
+                }
+            },
+
+            /**
+             * Update product information
+             */
+            async updateProduct() {
+                try {
+                    // Create a clean copy without _id
+                    const { _id, ...updateData } = this.editingProduct;
+                    
+                    const response = await fetch(`http://localhost:3000/api/product_info/${_id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData) // Send only updatable fields
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Update failed');
+                    }
+
+                    alert('Product updated successfully!');
+                    this.resetEditForm();
+                    await this.fetchAllProducts();
+                } catch (err) {
+                    console.error('Update error:', err);
+                    this.editProductError = `Update failed: ${err.message}`;
+                }
+            },
+
+            /**
+             * Reset edit form
+             */
+            resetEditForm() {
+                this.productNameToEdit = '';
+                this.editingProduct = null;
+                this.editProductError = '';
+                this.showEditProduct = false;
+            },
+            
+            /**
+             * Set active admin view
+             */
+            setActiveView(view) {
+                this.activeView = view;
+            },
+
+            /*****************************************************************
+             * ADMIN BOOKING MANAGEMENT METHODS
+             ****************************************************************/
+            
+            /**
+             * Fetch bookings with optional filter
+             */
+            async fetchBookings(filter = 'all') {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/bookings?filter=${filter}`);
+                    this.bookings = await response.json();
+                } catch (error) {
+                    console.error('Error fetching bookings:', error);
+                }
+            },
+            
+            /**
+             * View all bookings
+             */
+            viewAllBookings() {
+                this.bookingStatusFilter = 'all';
+                this.fetchBookings('all');
+            },
+            
+            /**
+             * View unattended bookings
+             */
+            viewUnattendedBookings() {
+                this.bookingStatusFilter = 'pending';
+                this.fetchBookings('pending');
+            },
+            
+            /**
+             * View past bookings
+             */
+            viewPastBookings() {
+                this.bookingStatusFilter = 'completed';
+                this.fetchBookings('completed');
+            },
+
+            /**
+             * Update booking status
+             */
+            async updateBookingStatus(bookingId, newStatus) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/bookings/${bookingId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            status: newStatus
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update booking status');
+                    }
+
+                    // Refresh the bookings list after updating
+                    this.fetchBookings(this.bookingStatusFilter);
+                    
+                } catch (error) {
+                    console.error('Error updating booking status:', error);
+                    alert('Failed to update booking status');
+                }
+            },
+
+            /**
+             * Validate telephone input
+             */
+            validateTelephoneInput() {
+                // Only allow numbers
+                this.telephoneSearch = this.telephoneSearch.replace(/\D/g, '');
+            },
+
+            /**
+             * Search bookings by telephone number
+             */
+            async searchByTelephone() {
+                if (!this.telephoneSearch) {
+                    this.fetchBookings('all');
+                    return;
+                }
+                try {
+                    const response = await fetch(`/api/bookings/search?telephone=${this.telephoneSearch}`);
+                    this.bookings = await response.json();
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.bookings = [];
+                }
+            },
+
+            /*****************************************************************
+             * PRODUCT COLLECTION MANAGEMENT METHODS
+             ****************************************************************/
+            
+            /**
+             * Close product collection search
+             */
+            closeCollectionSearch() {
+                this.showCollectionSearch = false;
+                this.showCollectedProducts = false;
+                this.showPendingProducts = false;
+                this.customerSearchQuery = '';
+                this.customerOrders = [];
+                this.viewingPending = false;
+            },
+
+            /**
+             * Search customer orders by name
+             */
+            async searchCustomerOrders() {
+                try {
+                    // Reset the product view flags
+                    this.showCollectedProducts = false;
+                    this.showPendingProducts = false;
+                    this.viewingPending = false;
+                    
+                    // Set the collection search flag
+                    this.showCollectionSearch = true;
+                    
+                    // Make the API call
+                    const response = await fetch(`http://localhost:3000/api/orders/search?name=${this.customerSearchQuery}`);
+                    this.customerOrders = await response.json();
+                } catch (err) {
+                    console.error('Search error:', err);
+                    this.customerOrders = [];
+                }
+            },
+            
+            /**
+             * Mark order as collected
+             */
+            async markAsCollected(orderId) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/orders/${orderId}/collect`, {
+                        method: 'PUT'
+                    });
+                    
+                    if (!response.ok) throw new Error('Failed to update status');
+                    
+                    // Immediately update the UI without waiting for refresh
+                    this.customerOrders = this.customerOrders.map(order => {
+                        if (order._id === orderId) {
+                            return {
+                                ...order,
+                                status: 'collected'
+                            };
+                        }
+                        return order;
+                    });
+                    
+                } catch (err) {
+                    console.error('Update error:', err);
+                    alert('Failed to update status');
+                }
+            },
+
+            /**
+             * View collected products
+             */
+            async viewCollectedProducts() {
+                try {
+                    this.viewingPending = false;
+                    this.showCollectionSearch = false;
+                    this.showPendingProducts = false;
+                    this.showCollectedProducts = true;
+                    
+                    const response = await fetch('/api/orders/search?status=collected');
+                    const orders = await response.json();
+                    
+                    // Client-side filtering as extra safeguard
+                    this.customerOrders = orders.filter(order => 
+                        order.status === 'collected'
+                    );
+                } catch (err) {
+                    console.error('Error fetching collected products:', err);
+                    this.customerOrders = [];
+                }
+            },
+
+            /**
+             * View pending products
+             */
+            async viewPendingProducts() {
+                try {
+                    this.viewingPending = true;
+                    this.showCollectionSearch = false;
+                    this.showCollectedProducts = false;
+                    this.showPendingProducts = true;
+                    
+                    const response = await fetch('/api/orders/search?status=pending');
+                    const data = await response.json();
+                    
+                    // Filter for orders that either:
+                    // 1. Don't have a status field (pending)
+                    // 2. Explicitly have status 'pending' or 'not collected'
+                    this.customerOrders = data.filter(order => 
+                        order.status === undefined || 
+                        order.status === null ||
+                        order.status === 'pending' || 
+                        order.status === 'not collected'
+                    );
+                } catch (err) {
+                    console.error('Error fetching pending products:', err);
+                    this.customerOrders = [];
+                }
+            },
+
+            /*****************************************************************
+             * BOOKING FORM METHODS
+             ****************************************************************/
+            
+            /**
+             * Format telephone number input
+             */
+            formatTelephone() {
+                // Remove any non-digit characters
+                this.bookingForm.telephone = this.bookingForm.telephone.replace(/\D/g, '');
+                // Limit to 8 characters
+                this.bookingForm.telephone = this.bookingForm.telephone.slice(0, 9);
+            },
+
+            /**
+             * Validate booking form
+             */
+            validateForm() {
+                this.formErrors = {
+                    telephone: '',
+                    address: '',
+                    services: '',
+                    aquariumSize: '',
+                    date: ''
+                };
+
+                let isValid = true;
+
+                // Only validate telephone if it has content
+                if (this.bookingForm.telephone && !/^\d{8}$/.test(this.bookingForm.telephone)) {
+                    this.formErrors.telephone = 'Please enter exactly 8 digits';
+                    isValid = false;
+                }
+
+                // Only validate address if it has content
+                if (this.bookingForm.address && /[^a-zA-Z0-9\s,]/.test(this.bookingForm.address)) {
+                    this.formErrors.address = 'Please enter a valid address (no symbols)';
+                    isValid = false;
+                }
+
+                // Services validation (can show immediately since it's checkboxes)
+                if (!Object.values(this.bookingForm.services).some(v => v)) {
+                    this.formErrors.services = 'Please select at least one service';
+                    isValid = false;
+                }
+
+                // Date validation
+                if (this.bookingForm.date) {
+                    const selectedDate = new Date(this.bookingForm.date);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    if (selectedDate < today) {
+                        this.formErrors.date = 'Date cannot be in the past';
+                        isValid = false;
+                    }
+                }
+
+                return isValid;
+            },
+
+            /**
+             * Initialize PayPal button for bookings
+             */
+            async initPayPalBookingButton() {
+                try {
+                    if (!window.paypal) {
+                        await this.loadPayPalSDK();
+                    }
+                    
+                    // Destroy any existing button first
+                    if (this.paypalBookingButton) {
+                        this.paypalBookingButton.close();
+                    }
+
+                    // Initialize empty errors
+                    this.formErrors = {
+                        telephone: '',
+                        address: '',
+                        services: '',
+                        aquariumSize: '',
+                        date: ''
+                    };
+
+                    // Check for minimum required fields to enable PayPal button
+                    let hasErrors = false;
+                    let requiredFieldsMissing = false;
+
+                    // Telephone validation (only if field has content)
+                    if (this.bookingForm.telephone) {
+                        if (!/^\d{8}$/.test(this.bookingForm.telephone)) {
+                            this.formErrors.telephone = 'Please enter exactly 8 digits';
+                            hasErrors = true;
+                        }
+                    } else {
+                        requiredFieldsMissing = true;
+                    }
+
+                    // Address validation (only if field has content)
+                    if (this.bookingForm.address) {
+                        if (/[^a-zA-Z0-9\s,]/.test(this.bookingForm.address)) {
+                            this.formErrors.address = 'Please enter a valid address (no symbols)';
+                            hasErrors = true;
+                        }
+                    } else {
+                        requiredFieldsMissing = true;
+                    }
+
+                    // Services validation (always required)
+                    if (!Object.values(this.bookingForm.services).some(v => v)) {
+                        this.formErrors.services = 'Please select at least one service';
+                        hasErrors = true;
+                    }
+
+                    // Date validation (only if field has content)
+                    if (this.bookingForm.date) {
+                        const selectedDate = new Date(this.bookingForm.date);
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        
+                        if (selectedDate < today) {
+                            this.formErrors.date = 'Date cannot be in the past';
+                            hasErrors = true;
+                        }
+                    } else {
+                        requiredFieldsMissing = true;
+                    }
+
+                    // Don't show error about required fields until user tries to pay
+                    if (hasErrors || requiredFieldsMissing) {
+                        // Only show the general error if user actually tried to proceed
+                        if (this.paypalProcessing) {
+                            this.paypalError = 'Please complete all required fields correctly';
+                        }
+                        return;
+                    }
+
+                    this.paypalBookingButton = paypal.Buttons({
+                        style: {
+                            layout: 'vertical',
+                            color: 'blue',
+                            shape: 'rect',
+                            label: 'paypal'
+                        },
+                        fundingSource: paypal.FUNDING.PAYPAL,
+                        
+                        createOrder: (data, actions) => {
+                            // Final validation check right before creating order
+                            if (!this.validateForm()) {
+                                this.paypalError = 'Please complete all required fields correctly';
+                                return Promise.reject(new Error('Form validation failed'));
+                            }
+                            
+                            return actions.order.create({
+                                purchase_units: [{
+                                    amount: {
+                                        value: this.bookingTotal.toFixed(2),
+                                        currency_code: "USD"
+                                    }
+                                }]
+                            });
+                        },
+                        
+                        onApprove: async (data, actions) => {
+                            this.paypalProcessing = true;
+                            try {
+                                const details = await actions.order.capture();
+                                const capturedAmount = parseFloat(details.purchase_units[0].payments.captures[0].amount.value);
+                                if (Math.abs(capturedAmount - this.bookingTotal) > 0.01) {
+                                    throw new Error('Payment amount mismatch');
+                                }
+                                await this.submitBooking();
+                                alert('Booking and payment completed successfully!');
+                            } catch (err) {
+                                console.error('Payment processing error:', err);
+                                this.paypalError = 'Payment completed but booking failed. Please contact support.';
+                            } finally {
+                                this.paypalProcessing = false;
+                            }
+                        },
+                        
+                        onError: (err) => {
+                            console.error('PayPal error:', err);
+                            this.paypalError = 'Payment system unavailable. Please try again later.';
+                        },
+                        
+                        onCancel: () => {
+                            this.paypalError = 'Payment was cancelled';
+                        }
+                    });
+                    
+                    if (this.paypalBookingButton.isEligible()) {
+                        this.paypalBookingButton.render('#paypal-booking-button-container');
+                    }
+                } catch (err) {
+                    console.error('PayPal initialization error:', err);
+                    this.paypalError = 'Payment system unavailable. Please try again later.';
+                }
+            },
+
+            /**
+             * Submit booking form
+             */
+            async submitBooking() {
+                // Create a proper Date object from the selected date
+                const serviceDate = new Date(this.bookingForm.date);
+                
+                // Prepare data for submission with the selected date
+                const bookingData = {
+                    address: this.bookingForm.address,
+                    telephone: this.bookingForm.telephone,
+                    description: this.bookingForm.description,
+                    date: serviceDate,
+                    aquariumSize: this.bookingForm.aquariumSize,
+                    services: this.bookingForm.services,
+                    createdAt: new Date(),
+                    status: 'pending'
+                };
+
+                // Send to server
+                const response = await fetch('/api/bookings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bookingData)
+                });
+
+                if (!response.ok) throw new Error('Booking failed');
+
+                // Reset form on success
+                this.resetBookingForm();
+            },
+
+            /**
+             * Reset booking form
+             */
+            resetBookingForm() {
+                this.bookingForm = {
+                    address: '',
+                    telephone: '',
+                    description: '',
+                    date: '',
+                    aquariumSize: 'big',
+                    services: {
+                        maintenance: false,
+                        cleaning: false,
+                        filterChange: false,
+                        pumpRepairs: false
+                    }
+                };
+                this.paypalError = '';
+            },
+
+            /*****************************************************************
+             * SHOP FUNCTIONALITY METHODS
+             ****************************************************************/
+            
+            /**
+             * Scroll carousel left or right
+             */
+            scrollCarousel(direction) {
+                const carousel = this.$refs.carousel;
+                const scrollAmount = 300; // Adjust this value to control scroll distance
+                
+                if (carousel) {
+                    carousel.scrollBy({
+                        left: direction * scrollAmount,
+                        behavior: 'smooth'
+                    });
+                }
+            },
+
+            /**
+             * Change active product category
+             */
+            // Change the changeCategory method to include aquarium builder
+            changeCategory(category) {
+                // Clean up aquarium if we're switching away from it
+                if (this.showAquariumBuilder && category !== 'aquarium') {
+                    this.cleanupAquariumBuilder();
+                }
+
+                this.activeCategory = category;
+                this.showBookingForm = category === 'bookings';
+                this.showAquariumBuilder = category === 'aquarium';
+                if (!this.showBookingForm && !this.showAquariumBuilder) {
+                    this.fetchProductsByCategory(category);
+                }
+                
+                if (this.showAquariumBuilder) {
+                    this.$nextTick(() => {
+                        this.initAquariumBuilder();
+                    });
+                }
+            },
+
+            /**
+             * Fetch products by category
+             */
+            async fetchProductsByCategory(category) {
+                try {
+                    const response = await fetch(`http://localhost:3000/api/product_info?type=${category}`);
+                    this.list = await response.json();
+                    this.originalLessons = [...this.list];
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                }
+            },
+
+            /*****************************************************************
+             * AUTHENTICATION METHODS
+             ****************************************************************/
+            
+            /**
+             * Select user type (admin or customer)
+             */
+            selectUserType(type) {
+                this.userType = type;
+                this.showLoginForm = true;
+                this.isSignup = false;
+                this.clearErrors();
+            },
+
+            /**
+             * Validate credentials
+             */
+            validateCredentials() {
+                this.clearErrors();
+                let isValid = true;
+                const username = this.userType === 'admin' 
+                    ? this.adminCredentials.username 
+                    : this.customerCredentials.username;
+                const password = this.userType === 'admin' 
+                    ? this.adminCredentials.password 
+                    : this.customerCredentials.password;
+
+                // Username validation
+                if (username.length < 5 || username.length > 9) {
+                    this.errors.username = 'Username must be 5-9 characters';
+                    isValid = false;
+                } else if (/[^a-zA-Z0-9]/.test(username)) {
+                    this.errors.username = 'Username cannot contain symbols';
+                    isValid = false;
+                }
+
+                // Password validation
+                if (password.length < 5 || password.length > 9) {
+                    this.errors.password = 'Password must be 5-9 characters';
+                    isValid = false;
+                } else if (/[^a-zA-Z0-9]/.test(password)) {
+                    this.errors.password = 'Password cannot contain symbols';
+                    isValid = false;
+                }
+
+                return isValid;
+            },
+
+            /**
+             * Clear error messages
+             */
+            clearErrors() {
+                this.errors = {
+                    username: '',
+                    password: ''
+                };
+            },
+
+            /**
+             * Handle login
+             */
+            async handleLogin() {
+                if (!this.validateCredentials()) return;
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: this.userType === 'admin' 
+                                ? this.adminCredentials.username 
+                                : this.customerCredentials.username,
+                            password: this.userType === 'admin' 
+                                ? this.adminCredentials.password 
+                                : this.customerCredentials.password,
+                            isAdmin: this.userType === 'admin'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Login failed');
+                    
+                    localStorage.setItem('token', data.token);
+                    if (data.role === 'admin') {
+                        this.showWelcomePage = false;
+                        this.showAuthModal = false;
+                        this.isAuthenticated = true;
+                        this.isAdminView = true;
+                        window.history.pushState(null, null, window.location.href);
+                        window.onpopstate = function() {
+                            window.history.pushState(null, null, window.location.href);
+                        };
+                    } else {
+                        this.isAuthenticated = true;
+                        this.showAuthModal = false;
+                        this.showWelcomePage = false;
+                    }
+                } catch (err) {
+                    alert(err.message);
+                }
+            },
+
+            /**
+             * Handle signup
+             */
+            async handleSignup() {
+                if (!this.validateCredentials()) return;
+                try {
+                    const response = await fetch('/api/auth/signup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(this.customerCredentials)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Signup failed');
+                    
+                    localStorage.setItem('token', data.token);
+                    this.isAuthenticated = true;
+                    this.showAuthModal = false;
+                    this.showWelcomePage = false;
+                } catch (err) {
+                    alert(err.message);
+                }
+            },
+
+            /**
+             * Logout user
+             */
+            logout() {
+                localStorage.removeItem('token');
+                this.isAdminView = false;
+                this.isAuthenticated = false;
+                this.showWelcomePage = true;
+                window.onpopstate = null;
+            },
+
+            /*****************************************************************
+             * SHOPPING CART METHODS
+             ****************************************************************/
+            
+            /**
+             * Search products
+             */
+            searchLessons() {
+                if (this.searchQuery.trim() === '') {
+                    this.list = [...this.originalLessons];
+                    return;
+                }
+                fetch(`http://localhost:3000/api/search?q=${this.searchQuery}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Search Results:', data);
+                        this.list = data;
+                    })
+                    .catch(error => console.error('Error searching lessons:', error));
+            },
+
+            /**
+             * Add product to cart
+             */
+            add(product) {
+                const existingItem = this.cart.find(item => item.subject === product.subject);
+                if (existingItem) {
+                    existingItem.bookedSeats++;
+                } else {
+                    this.cart.push({
+                        ...product,
+                        bookedSeats: 1
+                    });
+                }
+                product.avail--;
+            },
+
+            /**
+             * Remove product from cart
+             */
+            remove(index) {
+                const item = this.cart[index];
+                const productInList = this.list.find(product => product.subject === item.subject);
+                if (productInList) {
+                    productInList.avail += item.bookedSeats;
+                }
+                this.cart.splice(index, 1);
+            },
+
+            /**
+             * Toggle between cart and product view
+             */
+            togglePage() {
+                this.showCart = !this.showCart;
+            },
+
+            /**
+             * Show cart page
+             */
+            handleCartPage() {
+                this.showCart = true;
+            },
+
+            /**
+             * Get discount percentage from location string
+             */
+            getDiscountPercentage(location) {
+                if (location.includes('10%')) return 10;
+                if (location.includes('20%')) return 20;
+                return 0;
+            },
+
+             /*****************************************************************
+             *below is for aquarium building part
+             ****************************************************************/
+            // Initialize the 3D aquarium builder
+initAquariumBuilder() {
+    // Clean up previous instance if exists
+    this.cleanupAquariumBuilder();
+    
+    // Create container
+    const container = document.createElement('div');
+    container.id = 'aquarium-container';
+    document.querySelector('.aquarium-builder-container').appendChild(container);
+    
+    // Create scene
+    this.aquariumScene = new THREE.Scene();
+    this.aquariumScene.background = new THREE.Color(0xD2B48C);
+    
+    // Create camera
+    this.aquariumCamera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+    this.aquariumCamera.position.set(0, 10, 15);
+    this.aquariumCamera.lookAt(0, 0, 0);
+    
+    // Create renderer
+    this.aquariumRenderer = new THREE.WebGLRenderer({ antialias: true });
+    this.aquariumRenderer.setSize(container.clientWidth, container.clientHeight);
+    this.aquariumRenderer.shadowMap.enabled = true;
+    container.appendChild(this.aquariumRenderer.domElement);
+    
+    // Add orbit controls
+    this.aquariumControls = new THREE.OrbitControls(this.aquariumCamera, this.aquariumRenderer.domElement);
+    this.aquariumControls.enableDamping = true;
+    this.aquariumControls.dampingFactor = 0.25;
+    
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    this.aquariumScene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1);
+    directionalLight.castShadow = true;
+    this.aquariumScene.add(directionalLight);
+    
+    // Create aquarium base and water
+    this.createAquariumBase();
+    
+    // Start animation loop
+    this.animateAquarium();
+    
+    // Handle window resize
+    window.addEventListener('resize', this.handleAquariumResize.bind(this));
+},
+
+createWater() {
+     // Remove existing water if it exists
+     if (this.water) {
+            this.aquariumScene.remove(this.water);
+            if (this.water.geometry) this.water.geometry.dispose();
+            if (this.water.material) this.water.material.dispose();
+        }
+        
+        if (!this.aquariumDimensions || !this.showWater) return;
+        
+        const { width, depth, height, thickness } = this.aquariumDimensions;
+        
+        // Calculate water dimensions (slightly smaller than aquarium interior)
+        const waterWidth = width - thickness * 2;
+        const waterDepth = depth - thickness * 2;
+        const waterHeight = height * 0.9; // Fill 90% of height
+        
+        // Create water geometry
+        const waterGeometry = new THREE.BoxGeometry(waterWidth, waterHeight, waterDepth);
+        
+        // Water material (without waves)
+        const waterMaterial = new THREE.MeshPhongMaterial({
+            color: 0x1a8cff,
+            transparent: true,
+            opacity: 0.7,
+            shininess: 100,
+            side: THREE.DoubleSide
+        });
+        
+        this.water = new THREE.Mesh(waterGeometry, waterMaterial);
+        
+        // Position water inside aquarium (static position)
+        this.water.position.y = -height/2 + thickness + waterHeight/2;
+        this.water.receiveShadow = true;
+        
+        this.aquariumScene.add(this.water);
+},
+
+
+// Create the aquarium tank
+createAquariumBase() {
+   // Set aquarium dimensions
+   this.aquariumDimensions = {
+        width: this.aquariumLength,
+        depth: this.aquariumBreadth,
+        height: this.aquariumHeight,
+        thickness: 0.3
+    };
+    
+    const { width, depth, height, thickness } = this.aquariumDimensions;
+    
+    // Glass material
+    const glassMaterial = new THREE.MeshPhongMaterial({
+        color: 0x88CCFF,
+        transparent: true,
+        opacity: 0.2,
+        shininess: 100,
+        side: THREE.DoubleSide
+    });
+    
+    // Bottom material
+    const bottomMaterial = new THREE.MeshPhongMaterial({
+        color: 0x333333,
+        shininess: 30
+    });
+    
+    // Create bottom
+    const bottomGeometry = new THREE.BoxGeometry(width, thickness, depth);
+    const bottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
+    bottom.position.y = -height/2 + thickness/2;
+    bottom.receiveShadow = true;
+    bottom.userData.isAquariumBase = true;
+    this.aquariumScene.add(bottom);
+    
+    // Create walls
+    const createWall = (w, h, d, x, y, z) => {
+        const geometry = new THREE.BoxGeometry(w, h, d);
+        const wall = new THREE.Mesh(geometry, glassMaterial);
+        wall.position.set(x, y, z);
+        wall.receiveShadow = true;
+        wall.userData.isAquariumWall = true;
+        this.aquariumScene.add(wall);
+    };
+    
+    // Back wall
+    createWall(width, height, thickness, 0, 0, -depth/2 + thickness/2);
+    
+    // Front wall
+    createWall(width, height, thickness, 0, 0, depth/2 - thickness/2);
+    
+    // Left wall
+    createWall(thickness, height, depth, -width/2 + thickness/2, 0, 0);
+    
+    // Right wall
+    createWall(thickness, height, depth, width/2 - thickness/2, 0, 0);
+    
+    // Update water
+    this.createWater();
+},
+
+
+
+// Animation loop
+animateAquarium() {
+    requestAnimationFrame(this.animateAquarium);
+    
+    // Update controls
+    if (this.aquariumControls) {
+        this.aquariumControls.update();
+    }
+    
+    // Render scene
+    if (this.aquariumRenderer && this.aquariumScene && this.aquariumCamera) {
+        this.aquariumRenderer.render(this.aquariumScene, this.aquariumCamera);
+    }
+},
+
+// Handle window resize
+handleAquariumResize() {
+    const container = document.getElementById('aquarium-container');
+    if (!container || !this.aquariumCamera || !this.aquariumRenderer) return;
+    
+    this.aquariumCamera.aspect = container.clientWidth / container.clientHeight;
+    this.aquariumCamera.updateProjectionMatrix();
+    this.aquariumRenderer.setSize(container.clientWidth, container.clientHeight);
+},
+
+// Modify your applyCustomDimensions method to update water if visible:
+applyCustomDimensions() {
+        // Validate inputs (minimum 1 unit)
+        this.aquariumLength = Math.max(1, parseFloat(this.aquariumLength) || 5);
+        this.aquariumBreadth = Math.max(1, parseFloat(this.aquariumBreadth) || 3);
+        this.aquariumHeight = Math.max(1, parseFloat(this.aquariumHeight) || 4);
+        
+        // Clear existing aquarium items while preserving the scene
+        this.clearAquariumItems(false);
+        
+        // Rebuild aquarium with new dimensions
+        this.createAquariumBase();
+        
+        // Update water if it's visible
+        if (this.showWater) {
+            this.createWater();
+        }
+},
+
+
+// Get aquarium bounds based on size
+getAquariumBounds() {
+    switch(this.aquariumSize) {
+        case 'small':
+            return { width: 5, depth: 5, height: 8, bottom: -4, top: 4 };
+        case 'large':
+            return { width: 15, depth: 10, height: 12, bottom: -6, top: 6 };
+        default: // medium
+            return { width: 10, depth: 8, height: 10, bottom: -5, top: 5 };
+    }
+},
+
+
+
+// Clean up when leaving aquarium builder
+clearAquariumItems(clearAll = false) {
+        // Remove only aquarium walls and water, keep other objects if clearAll is false
+        const toRemove = [];
+        
+        this.aquariumScene.children.forEach(child => {
+            if (clearAll || 
+                child === this.water || 
+                child.userData?.isAquariumWall || 
+                child.userData?.isAquariumBase) {
+                toRemove.push(child);
+            }
+        });
+        
+        toRemove.forEach(child => {
+            this.aquariumScene.remove(child);
+            if (child.geometry) child.geometry.dispose();
+            if (child.material) {
+                if (Array.isArray(child.material)) {
+                    child.material.forEach(m => m.dispose());
+                } else {
+                    child.material.dispose();
+                }
+            }
+        });
+        
+        if (clearAll) {
+            this.aquariumItems = [];
+        }
+    },
+
+setupKeyboardControls() {
+    document.addEventListener('keydown', (event) => {
+        if (!this.showAquariumBuilder) return;
+        
+        const moveSpeed = 0.5;
+        const moveVector = new THREE.Vector3();
+        
+        switch(event.key) {
+            case 'ArrowUp':
+                moveVector.set(0, moveSpeed, 0); // Move up
+                break;
+            case 'ArrowDown':
+                moveVector.set(0, -moveSpeed, 0); // Move down
+                break;
+            case 'ArrowLeft':
+                moveVector.set(-moveSpeed, 0, 0); // Move left
+                break;
+            case 'ArrowRight':
+                moveVector.set(moveSpeed, 0, 0); // Move right
+                break;
+            case 'w':
+            case 'W':
+                moveVector.set(0, 0, -moveSpeed); // Move forward
+                break;
+            case 's':
+            case 'S':
+                moveVector.set(0, 0, moveSpeed); // Move backward
+                break;
+            default:
+                return; // Skip other keys
+        }
+        
+        // Apply movement relative to camera orientation
+        moveVector.applyQuaternion(this.aquariumCamera.quaternion);
+        this.aquariumCamera.position.add(moveVector);
+        this.aquariumControls.target.add(moveVector);
+    });
+},
+
+cleanupAquariumBuilder() {
+    if (this.aquariumPaypalButton) {
+    this.aquariumPaypalButton.close();
+    this.aquariumPaypalButton = null;
+}
+this.aquariumPaypalError = '';
+
+    // Remove event listeners
+    window.removeEventListener('resize', this.handleAquariumResize);
+    
+    // Dispose of Three.js objects
+    if (this.aquariumRenderer) {
+        this.aquariumRenderer.dispose();
+        const container = document.getElementById('aquarium-container');
+        if (container) {
+            container.innerHTML = '';
+            container.remove();
+        }
+    }
+    
+    // Clear scene
+    if (this.aquariumScene) {
+        while(this.aquariumScene.children.length > 0) { 
+            const object = this.aquariumScene.children[0];
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(m => m.dispose());
+                } else {
+                    object.material.dispose();
+                }
+            }
+            this.aquariumScene.remove(object);
+        }
+    }
+    
+    // Dispose of controls
+    if (this.aquariumControls) {
+        this.aquariumControls.dispose();
+    }
+    
+    // Reset variables
+    this.aquariumRenderer = null;
+    this.aquariumScene = null;
+    this.aquariumCamera = null;
+    this.aquariumControls = null;
+    this.water = null;
+},
+
+
+toggleWater() {
+        this.showWater = !this.showWater;
+        if (this.showWater) {
+            this.createWater();
+        } else if (this.water) {
+            this.aquariumScene.remove(this.water);
+            if (this.water.geometry) this.water.geometry.dispose();
+            if (this.water.material) this.water.material.dispose();
+            this.water = null;
+        }
+    },
+
+//below for paypal pay aquarium building
+async initAquariumPayPalButton() {
+    try {
+        if (!window.paypal) {
+            await this.loadPayPalSDK();
+        }
+        
+        // Destroy any existing button first
+        if (this.aquariumPaypalButton) {
+            this.aquariumPaypalButton.close();
+        }
+
+        this.aquariumPaypalButton = paypal.Buttons({
+            style: {
+                layout: 'vertical',
+                color: 'blue',
+                shape: 'rect',
+                label: 'paypal'
+            },
+            fundingSource: paypal.FUNDING.PAYPAL,
+            
+            createOrder: (data, actions) => {
+                // Validate dimensions
+                if (this.aquariumLength <= 0 || this.aquariumBreadth <= 0 || this.aquariumHeight <= 0) {
+                    this.aquariumPaypalError = 'Please enter valid dimensions';
+                    return Promise.reject(new Error('Invalid dimensions'));
+                }
+                
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: this.aquariumTotalPrice.toFixed(2),
+                            currency_code: "USD",
+                            breakdown: {
+                                item_total: {
+                                    value: this.aquariumTotalPrice.toFixed(2),
+                                    currency_code: "USD"
+                                }
+                            }
+                        },
+                        items: [{
+                            name: `Custom Aquarium (${this.aquariumLength}m × ${this.aquariumBreadth}m × ${this.aquariumHeight}m)`,
+                            unit_amount: {
+                                value: this.aquariumTotalPrice.toFixed(2),
+                                currency_code: "USD"
+                            },
+                            quantity: "1"
+                        }]
+                    }]
+                });
+            },
+            
+            onApprove: async (data, actions) => {
+                this.aquariumPaypalProcessing = true;
+                try {
+                    const details = await actions.order.capture();
+                    const capturedAmount = parseFloat(details.purchase_units[0].payments.captures[0].amount.value);
+                    
+                    if (Math.abs(capturedAmount - this.aquariumTotalPrice) > 0.01) {
+                        throw new Error('Payment amount mismatch');
+                    }
+                    
+                    // Here you can add code to save the aquarium order to your database
+                    alert('Payment completed successfully! Your custom aquarium order has been placed.');
+                    
+                } catch (err) {
+                    console.error('Payment processing error:', err);
+                    this.aquariumPaypalError = 'Payment completed but order processing failed. Please contact support.';
+                } finally {
+                    this.aquariumPaypalProcessing = false;
+                }
+            },
+            
+            onError: (err) => {
+                console.error('PayPal error:', err);
+                this.aquariumPaypalError = 'Payment system unavailable. Please try again later.';
+            }
+        });
+        
+        if (this.aquariumPaypalButton.isEligible()) {
+            this.aquariumPaypalButton.render('#paypal-aquarium-button-container');
+        }
+    } catch (err) {
+        console.error('PayPal initialization error:', err);
+        this.aquariumPaypalError = 'Payment system unavailable. Please try again later.';
+    }
+}
+
+
+
+        //above is for aquarium building part
+        }
+    });
+</script>
+</body>
+</html>
+
+    
+   
